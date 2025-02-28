@@ -1,10 +1,6 @@
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
-
-
-const iconUrl = status ? pathSuccessIcon : pathErrorIcon
-
 const form = document.querySelector('.form');
 const delayInput = document.querySelector('input[name="delay"]');
 
@@ -15,16 +11,21 @@ function handleSubmit(e) {
 
   const stateRadio = document.querySelector('input[name="state"]:checked');
 
-  const state = stateRadio.value === 'fulfilled' ? true : false;
-  const delay = +delayInput.value;
+  if (!stateRadio) {
+    iziToast.error({
+      title: 'Помилка',
+      message: 'Оберіть стан обіцянки!',
+      position: 'topRight',
+    });
+    return;
+  }
+
+  const state = stateRadio.value === 'fulfilled';
+  const delay = Number(delayInput.value);
 
   const promise = new Promise((resolve, reject) => {
     setTimeout(() => {
-      if (state) {
-        resolve(delay);
-      } else {
-        reject(delay);
-      }
+      state ? resolve(delay) : reject(delay);
     }, delay);
   });
 
@@ -34,11 +35,8 @@ function handleSubmit(e) {
 }
 
 function showMessage(status, delay) {
-  const title = status ? 'OK' : 'Error';
-  const message = status
-    ? `Fulfilled promise in ${delay}ms`
-    : `Rejected promise in ${delay}ms`;
-  const iconUrl = status ? pathSuccessIcon : pathErrorIcon;
+  const title = status ? '✅ Обіцянку виконано' : '❌ Обіцянку відхилено';
+  const message = `за ${delay} мс`;
   const backgroundColor = status ? '#59A10D' : '#EF4040';
 
   iziToast.show({
@@ -51,10 +49,6 @@ function showMessage(status, delay) {
     messageSize: '16px',
     messageLineHeight: '24px',
     messageColor: 'white',
-    iconUrl,
     backgroundColor,
   });
 }
-
-
-

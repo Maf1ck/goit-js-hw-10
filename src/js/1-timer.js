@@ -3,8 +3,6 @@ import 'flatpickr/dist/flatpickr.min.css';
 import iziToast from 'izitoast';
 import 'izitoast/dist/css/iziToast.min.css';
 
-
-
 const dateInput = document.getElementById('datetime-picker');
 const startBtn = document.querySelector('[data-start]');
 const timeElements = {
@@ -13,9 +11,12 @@ const timeElements = {
   minutesEl: document.querySelector('[data-minutes]'),
   secondsEl: document.querySelector('[data-seconds]'),
 };
+
 let userDate;
 let currentInterval;
-const flatpickrOptins = {
+startBtn.disabled = true; // Відключаємо кнопку при завантаженні
+
+const flatpickrOptions = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
@@ -38,8 +39,8 @@ const flatpickrOptins = {
   },
   onClose(selectedDates) {
     userDate = selectedDates[0];
-    console.log(userDate);
     checkDate(userDate);
+    updateTimerDisplay(); 
   },
 };
 
@@ -51,20 +52,22 @@ const timeUnits = {
 };
 
 startBtn.addEventListener('click', startTimer);
-
-flatpickr(dateInput, flatpickrOptins);
+flatpickr(dateInput, flatpickrOptions);
 
 function showMessage() {
   iziToast.error({
     position: 'topRight',
-    title: 'Error',
-    message: 'Please choose a date in the future',
+    title: 'Помилка',
+    message: 'Оберіть дату в майбутньому',
     backgroundColor: '#EF4040',
   });
 }
 
 function checkDate(date) {
-  if (new Date(date) > new Date()) {
+  const now = new Date().getTime(); 
+  const selectedTime = date.getTime(); 
+
+  if (selectedTime > now) {
     startBtn.disabled = false;
     return true;
   } else {
@@ -78,24 +81,28 @@ function startTimer() {
   if (!checkDate(userDate)) return;
 
   clearInterval(currentInterval);
+  updateTimerDisplay(); 
 
-  currentInterval = setInterval(() => checkTimer(timeUnits), 1000);
-  dateInput.disabled = true
-  startBtn.disabled = true
+  currentInterval = setInterval(() => updateTimerDisplay(), 1000);
+
+  dateInput.disabled = true;
+  startBtn.disabled = true;
 }
 
-function checkTimer(timeUnits) {
-  let totalLeft = userDate - new Date();
+function updateTimerDisplay() {
+  let totalLeft = userDate.getTime() - new Date().getTime(); 
 
-  if (totalLeft <= 0) return stopTimer();
+  if (totalLeft <= 0) {
+    stopTimer();
+    return;
+  }
 
-  const getLeft = unit =>
-    Math.floor(totalLeft / timeUnits[unit])
+  for (let key in timeUnits) {
+    const value = Math.floor(totalLeft / timeUnits[key])
       .toString()
       .padStart(2, '0');
 
-  for (let key in timeUnits) {
-    timeElements[key + 'El'].textContent = getLeft(key);
+    timeElements[key + 'El'].textContent = value;
     totalLeft %= timeUnits[key];
   }
 }
@@ -104,5 +111,3 @@ function stopTimer() {
   clearInterval(currentInterval);
   dateInput.disabled = false;
 }
-
-
